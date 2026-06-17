@@ -9,6 +9,15 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.8" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Proxies" Version="10.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\2-Payment.Application\2-Payment.Application.csproj" />
+    <ProjectReference Include="..\2-Payment.Domain\4-Payment.Domain.csproj" />
+    <ProjectReference Include="..\3-Payment.Infrastructure\3-Payment.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>
