@@ -4,6 +4,7 @@
     {
         public int IdPagamento { get; }
         public int IdCompra { get; }
+        public virtual Compra? Compra { get; set; }
         public DateTime DataHoraInclusao { get; }
         public DateTime? DataHoraAlteracao { get; set; }
         public STATUS_PAGAMENTO Status { get; set; }

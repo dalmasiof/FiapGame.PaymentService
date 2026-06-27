@@ -28,7 +28,7 @@ namespace _2_Payment.Application.Service
 
             if (conta == null) throw new ArgumentException("Conta não encontrada.");
 
-            conta.Adicionar(conta.IdConta);
+            conta.Adicionar(contaDto.Valor);
             await _contaRepository.AdicionarSaldo(conta, contaDto.Valor);
 
             return new ContaDto(conta.IdConta, conta.Saldo);

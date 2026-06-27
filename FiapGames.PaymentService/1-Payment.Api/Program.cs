@@ -21,6 +21,7 @@ builder.Services.AddScoped<IBibliotecaService, BibliotecaService>();
 builder.Services.AddScoped<ICompraRepository, CompraRepository>();
 builder.Services.AddScoped<IContaRepository, ContaRepository>();
 builder.Services.AddScoped<IPagamentoRepository, PagamentoRepository>();
+builder.Services.AddScoped<IPagamentoService, PagamentoService>();
 
 // Mensageria stub (a implementação real deve ser adicionada posteriormente)
 builder.Services.AddScoped<IMessagingPublisher, MessagingPublisher>();

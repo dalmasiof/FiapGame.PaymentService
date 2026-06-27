@@ -21,6 +21,7 @@ namespace Context
             builder.Entity<Compra>(entity =>
             {
                 entity.HasKey(e => e.Id);
+                entity.Property(e => e.IdUsuario).IsRequired();
                 entity.Property(e => e.DataCompra).IsRequired();
                 entity.Property(e => e.ValorTotalBruto).IsRequired();
                 entity.Property(e => e.ValorTotalLiquido).IsRequired();
@@ -49,6 +50,10 @@ namespace Context
                 entity.Property(e => e.IdCompra).IsRequired();
                 entity.Property(e => e.DataHoraInclusao).IsRequired();
                 entity.Property(e => e.Status).IsRequired();
+                entity.HasOne(e => e.Compra)
+                      .WithMany()
+                      .HasForeignKey(e => e.IdCompra)
+                      .OnDelete(DeleteBehavior.Restrict);
             });
         }
     }

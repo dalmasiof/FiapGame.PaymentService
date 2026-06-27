@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using _2_Payment.Application.Interfaces;
 using Domain;
 using Context;
@@ -25,6 +27,14 @@ namespace _3_Payment.Infrastructure.Repository
         {
             _context.Pagamentos.Update(pagamento);
             await _context.SaveChangesAsync();
+        }
+
+        public async Task<IEnumerable<Pagamento>> ObterPorUsuario(int idUsuario)
+        {
+            return await _context.Pagamentos
+                .Include(p => p.Compra)
+                .Where(p => p.Compra != null && p.Compra.IdUsuario == idUsuario)
+                .ToListAsync();
         }
     }
 }

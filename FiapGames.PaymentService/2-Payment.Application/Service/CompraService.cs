@@ -19,7 +19,7 @@ namespace _2_Payment.Application.Service
 
         public async Task Add(CriarCompraDto compraDto)
         {
-            var compra = new Compra(0);
+            var compra = new Compra(0, compraDto.IdUsuario);
 
             foreach (var jogo in compraDto.Jogos)
             {
