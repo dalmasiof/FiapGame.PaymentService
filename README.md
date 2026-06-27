@@ -1,37 +1,35 @@
 # FiapGames.Payment
 
-Microserviço responsável pelo gerenciamento de pagamentos, saldo e histórico financeiro da plataforma **FiapGames**.
+Microserviço responsável pelo processamento de pagamentos, controle de saldo e registro de movimentações financeiras da plataforma FiapGames.
 
-Este serviço centraliza funcionalidades relacionadas ao processamento de pagamentos, gerenciamento de saldo dos usuários, consumo de eventos de pedidos e registro de movimentações financeiras da plataforma.
+Este serviço atua como o componente financeiro do ecossistema, recebendo eventos e coordenando operações como compra, cobrança, validação de saldo e histórico de transações.
 
-> **Objetivo:** fornecer uma base reutilizável e padronizada para microsserviços do ecossistema FiapGames, seguindo princípios de Clean Architecture, separação de responsabilidades e baixo acoplamento.
+> Objetivo: oferecer uma base organizada e extensível para pagamentos, seguindo princípios de Clean Architecture, separação de responsabilidades e integração com mensageria.
 
 ---
 
 ## Arquitetura do Projeto
 
-A solução segue uma arquitetura em camadas inspirada em **Clean Architecture / DDD (Domain-Driven Design)**, visando facilitar manutenção, testes e evolução do sistema.
+A solução é estruturada em camadas inspiradas em Clean Architecture e DDD, com foco em manutenibilidade, testes e evolução incremental.
 
-## Executar via Docker
+### Executar via Docker
 
-Executar comando no cmd na raiz do projeto:
+Na raiz do projeto, execute:
 
 ```bash
 docker compose up --build
 ```
 
-A solução segue uma arquitetura em camadas inspirada em **Clean Architecture / DDD (Domain-Driven Design)**, visando facilitar manutenção, testes e evolução do sistema.
-
 ### Estrutura da solução
 
 ```txt
-FiapGames.Payment.sln
+FiapGames.PaymentService.sln
 
 src/
-├── Payment.Api
-├── Payment.Application
-├── Payment.Infrastructure
-└── Payment.Domain
+├── 1-Payment.Api
+├── 2-Payment.Application
+├── 2-Payment.Domain
+└── 3-Payment.Infrastructure
 
 test/
 ├── Payment.Application.Test
@@ -40,106 +38,85 @@ test/
 
 ### Responsabilidades das camadas
 
-#### `Payment.Api`
+#### 1-Payment.Api
 
-Camada de exposição da API.
+Camada de exposição da API HTTP.
 
 Responsável por:
+- Endpoints REST para pagamento, saldo e compras
+- Configuração de Swagger/OpenAPI
+- Middleware e pipeline HTTP
+- Injeção de dependências
+- Exposição de endpoints financeiros
 
-* Endpoints REST
-* Swagger/OpenAPI
-* Middleware e pipeline HTTP
-* Configurações de DI (Dependency Injection)
-* Exposição de endpoints financeiros
-
-#### `Payment.Application`
+#### 2-Payment.Application
 
 Camada de aplicação.
 
 Responsável por:
+- Regras de negócio de pagamentos
+- Serviços de aplicação
+- Casos de uso
+- DTOs
+- Interfaces de contratos
 
-* Regras de negócio da aplicação
-* Serviços de aplicação
-* Casos de uso
-* DTOs
-* Interfaces de contratos
-
-#### `Payment.Domain`
+#### 2-Payment.Domain
 
 Camada de domínio.
 
 Responsável por:
+- Entidades como compra, conta e pagamento
+- Regras de domínio
+- Objetos de valor
+- Contratos principais
+- Lógica independente de framework
 
-* Entidades
-* Regras de domínio
-* Objetos de valor
-* Contratos centrais
-* Regras independentes de framework
-
-#### `Payment.Infrastructure`
+#### 3-Payment.Infrastructure
 
 Camada de infraestrutura.
 
 Responsável por:
-
-* Persistência de dados
-* Entity Framework Core
-* Contextos (`DbContext`)
-* Repositórios
-* Integração com mensageria
-* Consumo de eventos
-* Implementações técnicas
-
-#### `Tests`
-
-Projetos de testes automatizados.
-
-Responsável por:
-
-* Testes unitários
-* Testes de regras de negócio
-* Garantia de qualidade do domínio e aplicação
+- Persistência de dados com Entity Framework Core
+- Repositórios
+- Contexto do banco
+- Integrações com mensageria
+- Implementações técnicas
 
 ---
 
 ## Principais Funcionalidades
 
 Este microserviço é responsável por:
-
-* Consulta de saldo do usuário
-* Adição de saldo
-* Débito automático de saldo
-* Registro de histórico financeiro
-* Consumo do evento `OrderPlacedEvent`
-* Processamento de pagamentos
-* Validação de saldo disponível
-* Persistência de movimentações financeiras
+- Consulta e atualização de saldo
+- Processamento de pagamentos
+- Registro de compras e movimentações financeiras
+- Consumo e publicação de eventos relacionados a orders e pagamentos
+- Validação de disponibilidade de saldo
+- Persistência do histórico financeiro
 
 ---
 
 ## Stack Tecnológica
 
-* **.NET 9**
-* **ASP.NET Core Web API**
-* **Entity Framework Core**
-* **MySQL**
-* **RabbitMQ**
-* **Swagger / OpenAPI**
-* **xUnit** (testes)
+- .NET 9
+- ASP.NET Core Web API
+- Entity Framework Core
+- SQL Server
+- RabbitMQ (integração planejada/implementada em infraestrutura)
+- Swagger / OpenAPI
+- xUnit (testes)
 
 ---
 
 ## Padrões Utilizados
 
-O projeto segue alguns princípios e padrões arquiteturais:
-
-* Clean Architecture
-* SOLID
-* Dependency Injection
-* Repository Pattern
-* Separation of Concerns
-* Domain-Oriented Design
-* Event-Driven Architecture
+- Clean Architecture
+- SOLID
+- Dependency Injection
+- Repository Pattern
+- Separation of Concerns
+- Domain-Oriented Design
+- Event-driven design
 
 ---
 
@@ -147,42 +124,31 @@ O projeto segue alguns princípios e padrões arquiteturais:
 
 ### Pré-requisitos
 
-Antes de executar o projeto, certifique-se de possuir instalado:
+Antes de executar este projeto, certifique-se de ter instalado:
+- .NET SDK 9+
+- SQL Server
+- Docker Desktop
+- Visual Studio 2022+ ou Rider
+- EF Core CLI
 
-* .NET SDK 9+
-* MySQL
-* RabbitMQ
-* Visual Studio 2022+ ou Rider
-* EF Core CLI
-
-Instalação do Entity Framework CLI:
+Instalar o CLI do Entity Framework:
 
 ```bash
 dotnet tool install --global dotnet-ef
 ```
 
-ou atualização:
+ou atualizar:
 
 ```bash
 dotnet tool update --global dotnet-ef
 ```
 
----
-
-## Configuração do `appsettings.json`
-
-Exemplo de configuração:
+### Exemplo de configuração
 
 ```json
 {
   "ConnectionStrings": {
-    "FIAPGamesConnection": "server=localhost;database=fiapgames_payment;user=root;password=sua_senha"
-  },
-
-  "RabbitMq": {
-    "Host": "localhost",
-    "Username": "guest",
-    "Password": "guest"
+    "FIAPGamesConnection": "Server=localhost,1436;Database=fiapgames_payment;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True;Encrypt=False"
   }
 }
 ```
@@ -200,27 +166,27 @@ dotnet restore
 Executar a aplicação:
 
 ```bash
-dotnet run --project src/Payment.Api
+dotnet run --project src/1-Payment.Api
 ```
 
 ---
 
 ## Migrations
 
-Criar uma migration:
+Criar migration:
 
 ```bash
 dotnet ef migrations add InitialCreate \
---project src/Payment.Infrastructure \
---startup-project src/Payment.Api
+--project src/3-Payment.Infrastructure \
+--startup-project src/1-Payment.Api
 ```
 
 Aplicar migrations:
 
 ```bash
 dotnet ef database update \
---project src/Payment.Infrastructure \
---startup-project src/Payment.Api
+--project src/3-Payment.Infrastructure \
+--startup-project src/1-Payment.Api
 ```
 
 ---
@@ -235,18 +201,9 @@ dotnet test
 
 ---
 
-## Convenções do Projeto
+## Licença
 
-### Nomenclatura
-
-#### Projetos
-
-```txt
-<Serviço>.Api
-<Serviço>.Application
-<Serviço>.Domain
-<Serviço>.Infrastructure
-```
+Projeto desenvolvido para fins acadêmicos e evolução arquitetural da plataforma FiapGames.
 
 #### Testes
 
