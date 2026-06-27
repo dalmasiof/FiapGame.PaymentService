@@ -1,7 +1,7 @@
 using _2_Payment.Application.Interfaces;
 using _2_Payment.Application.Service;
-using _3_Payment.Infrastructure.Repository;
 using _3_Payment.Infrastructure.Messaging;
+using _3_Payment.Infrastructure.Repository;
 using Context;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,8 +10,8 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 
 builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+
 
 // Dependency injection registrations
 builder.Services.AddScoped<ICompraService, CompraService>();
@@ -32,12 +32,15 @@ builder.Services.AddDbContext<PaymentContext>(opts =>
     .UseLazyLoadingProxies()
     .UseSqlServer(connectionString));
 
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
 app.UseHttpsRedirection();

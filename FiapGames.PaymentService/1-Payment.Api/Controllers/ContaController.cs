@@ -4,6 +4,9 @@ using _2_Payment.Application.Interfaces;
 
 namespace _1_Payment.Api.Controllers
 {
+    /// <summary>
+    /// API para operações de conta e saldo.
+    /// </summary>
     [ApiController]
     [Route("api/[controller]")]
     public class ContaController : ControllerBase
@@ -15,6 +18,10 @@ namespace _1_Payment.Api.Controllers
             _contaService = contaService;
         }
 
+        /// <summary>
+        /// Obtém o saldo de uma conta.
+        /// </summary>
+        /// <param name="idConta">Identificador da conta.</param>
         [HttpGet("{idConta}/saldo")]
         public async Task<IActionResult> ObterSaldo(int idConta)
         {
@@ -22,6 +29,10 @@ namespace _1_Payment.Api.Controllers
             return Ok(saldo);
         }
 
+        /// <summary>
+        /// Adiciona saldo a uma conta.
+        /// </summary>
+        /// <param name="dto">Dados da conta e valor a adicionar.</param>
         [HttpPost("adicionar-saldo")]
         public async Task<IActionResult> AdicionarSaldo([FromBody] ContaDto dto)
         {
