@@ -33,6 +33,11 @@ namespace _3_Payment.Infrastructure.Repository
             return await _context.Contas.FirstOrDefaultAsync(c => c.IdConta == id);
         }
 
+        public async Task<Conta?> ObterContaPorLoginId(int idLogin)
+        {
+            return await _context.Contas.FirstOrDefaultAsync(c => c.IdLogin == idLogin);
+        }
+
         public async Task<decimal> ObterSaldo(int idConta)
         {
             var conta = await ObterContaPorId(idConta);

@@ -6,7 +6,7 @@
         public int JogoId { get; private set; }
         public decimal PrecoAplicado { get; private set; }
 
-        private CompraJogo() { }
+        protected CompraJogo() { }
 
         public CompraJogo(int jogoId, decimal preco)
         {
