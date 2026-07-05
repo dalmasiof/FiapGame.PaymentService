@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using _2_Payment.Application.Dtos;
 using _2_Payment.Application.Interfaces;
 
@@ -9,6 +10,7 @@ namespace _1_Payment.Api.Controllers
     /// </summary>
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class ContaController : ControllerBase
     {
         private readonly IContaService _contaService;
@@ -33,6 +35,7 @@ namespace _1_Payment.Api.Controllers
         /// Adiciona saldo a uma conta.
         /// </summary>
         /// <param name="dto">Dados da conta e valor a adicionar.</param>
+        [Authorize(Roles = "Admin")]
         [HttpPost("adicionar-saldo")]
         public async Task<IActionResult> AdicionarSaldo([FromBody] ContaDto dto)
         {

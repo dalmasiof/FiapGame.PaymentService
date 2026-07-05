@@ -15,6 +15,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\2-Payment.Application\2-Payment.Application.csproj" />
+    <ProjectReference Include="..\2-Payment.Domain\4-Payment.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Using Include="Xunit" />
   </ItemGroup>
 

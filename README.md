@@ -171,6 +171,20 @@ dotnet run --project src/1-Payment.Api
 
 ---
 
+## Kubernetes (autonomia por serviço)
+
+Manifests próprios do serviço estão em `k8s/`:
+
+- `payment-api-configmap.yaml`
+- `payment-api-secret.yaml`
+- `payment-api-service.yaml`
+- `payment-api-deployment.yaml`
+
+ConfigMap contém variáveis não sensíveis (ambiente, urls e host/porta de RabbitMQ).
+Secret contém variáveis sensíveis (connection string completa e credenciais de RabbitMQ).
+
+---
+
 ## Migrations
 
 Criar migration:

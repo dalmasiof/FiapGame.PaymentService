@@ -3,7 +3,11 @@ using _2_Payment.Application.Service;
 using _3_Payment.Infrastructure.Messaging;
 using _3_Payment.Infrastructure.Repository;
 using Context;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using RabbitMQ.Client;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,6 +16,20 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
+var rabbitHost = builder.Configuration["RabbitMq:HostName"] ?? "localhost";
+var rabbitPort = int.TryParse(builder.Configuration["RabbitMq:Port"], out var parsedPort) ? parsedPort : 5672;
+var rabbitUser = builder.Configuration["RabbitMq:UserName"] ?? "guest";
+var rabbitPass = builder.Configuration["RabbitMq:Password"] ?? "guest";
+
+builder.Services.AddSingleton<IConnectionFactory>(_ => new ConnectionFactory
+{
+    HostName = rabbitHost,
+    Port = rabbitPort,
+    UserName = rabbitUser,
+    Password = rabbitPass,
+    AutomaticRecoveryEnabled = true,
+    NetworkRecoveryInterval = TimeSpan.FromSeconds(10)
+});
 
 // Dependency injection registrations
 builder.Services.AddScoped<ICompraService, CompraService>();
@@ -23,10 +41,42 @@ builder.Services.AddScoped<IContaRepository, ContaRepository>();
 builder.Services.AddScoped<IPagamentoRepository, PagamentoRepository>();
 builder.Services.AddScoped<IPagamentoService, PagamentoService>();
 
-// Mensageria stub (a implementação real deve ser adicionada posteriormente)
 builder.Services.AddScoped<IMessagingPublisher, MessagingPublisher>();
+builder.Services.AddHostedService<CompraSolicitadaWorker>();
 
 var connectionString = builder.Configuration.GetConnectionString("FIAPGamesConnection");
+var jwtKey = builder.Configuration["Jwt:Key"];
+if (string.IsNullOrWhiteSpace(jwtKey))
+{
+    throw new InvalidOperationException("Configuration key Jwt:Key is required.");
+}
+
+var keyBytes = Encoding.ASCII.GetBytes(jwtKey);
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.RequireHttpsMetadata = false;
+    options.SaveToken = true;
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(keyBytes),
+        ValidateIssuer = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidateAudience = true,
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+        ValidateLifetime = true,
+        ClockSkew = TimeSpan.Zero
+    };
+});
+
+builder.Services.AddAuthorization();
+
 builder.Services.AddDbContext<PaymentContext>(opts =>
     opts
         .UseLazyLoadingProxies()
@@ -53,6 +103,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

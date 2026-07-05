@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using _2_Payment.Application.Interfaces;
 
 namespace _1_Payment.Api.Controllers
@@ -8,6 +9,7 @@ namespace _1_Payment.Api.Controllers
     /// </summary>
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class PagamentoController : ControllerBase
     {
         private readonly IPagamentoService _pagamentoService;
