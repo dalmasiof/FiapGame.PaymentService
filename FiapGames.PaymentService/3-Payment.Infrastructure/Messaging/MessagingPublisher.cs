@@ -53,6 +53,7 @@ namespace _3_Payment.Infrastructure.Messaging
             {
                 CompraId = compraId,
                 UsuarioId = userId,
+                EmailUsuario = emailUsuario,
                 Aprovado = aprovado,
                 ValorTotal = valorTotal,
                 Status = status,
