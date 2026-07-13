@@ -4,7 +4,7 @@
     {
         public int IdPagamento { get; }
         public int IdCompra { get; }
-        public virtual Compra? Compra { get; set; }
+        public int IdUsuario { get; }
         public DateTime DataHoraInclusao { get; }
         public DateTime? DataHoraAlteracao { get; set; }
         public STATUS_PAGAMENTO Status { get; set; }
@@ -14,10 +14,11 @@
             
         }
 
-        public Pagamento(int idPagamento, int idCompra)
+        public Pagamento(int idPagamento, int idCompra, int idUsuario)
         {
             IdPagamento = idPagamento;
             IdCompra = idCompra;
+            IdUsuario = idUsuario;
             DataHoraInclusao = DateTime.Now;
             Status = STATUS_PAGAMENTO.AGUARDANDO_PAGAMENTO;
         }

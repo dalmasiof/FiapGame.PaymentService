@@ -15,6 +15,12 @@ namespace _3_Payment.Infrastructure.Repository
             _context = context;
         }
 
+        public async Task AdicionarConta(Conta conta)
+        {
+            await _context.Contas.AddAsync(conta);
+            await _context.SaveChangesAsync();
+        }
+
         public async Task AdicionarSaldo(Conta conta, decimal valor)
         {
             // conta já alterada pelo domínio

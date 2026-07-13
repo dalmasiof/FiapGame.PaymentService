@@ -29,7 +29,7 @@ namespace Context
 
                 if (!await context.Pagamentos.AnyAsync())
                 {
-                    var pagamento = new Pagamento(0, compra.Id);
+                    var pagamento = new Pagamento(0, compra.Id, compra.IdUsuario);
                     await context.Pagamentos.AddAsync(pagamento);
                 }
             }

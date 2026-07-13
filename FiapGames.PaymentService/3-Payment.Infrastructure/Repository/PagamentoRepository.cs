@@ -32,8 +32,7 @@ namespace _3_Payment.Infrastructure.Repository
         public async Task<IEnumerable<Pagamento>> ObterPorUsuario(int idUsuario)
         {
             return await _context.Pagamentos
-                .Include(p => p.Compra)
-                .Where(p => p.Compra != null && p.Compra.IdUsuario == idUsuario)
+                .Where(p => p.IdUsuario == idUsuario)
                 .ToListAsync();
         }
     }

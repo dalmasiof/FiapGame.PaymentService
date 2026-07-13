@@ -13,6 +13,24 @@ namespace _2_Payment.Application.Service
             _contaRepository = contaRepository;
         }
 
+        public async Task<ContaDto> CriarContaAsync(int idLogin)
+        {
+            var contaExistente = await _contaRepository.ObterContaPorLoginId(idLogin);
+            if (contaExistente is not null)
+            {
+                return new ContaDto(contaExistente.IdConta, contaExistente.Saldo);
+            }
+
+            var conta = new Conta(0)
+            {
+                IdLogin = idLogin
+            };
+
+            await _contaRepository.AdicionarConta(conta);
+
+            return new ContaDto(conta.IdConta, conta.Saldo);
+        }
+
         public async Task<ContaDto> ObterSaldo(int idConta)
         {
             var conta = await _contaRepository.ObterContaPorId(idConta);

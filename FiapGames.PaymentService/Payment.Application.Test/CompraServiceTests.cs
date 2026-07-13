@@ -40,6 +40,8 @@ public class CompraServiceTests
     {
         public bool DebitarCalled { get; private set; }
 
+        public Task<ContaDto> CriarContaAsync(int idLogin) => Task.FromResult(new ContaDto(idLogin, 0m));
+
         public Task<ContaDto> AdicionarSaldo(ContaDto contaDto) => Task.FromResult(contaDto);
 
         public Task<ContaDto> DebitarSaldo(ContaDto contaDto)

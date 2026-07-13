@@ -1,7 +1,6 @@
 using System.Text;
 using System.Text.Json;
 using _2_Payment.Application.Interfaces;
-using Domain;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -10,22 +9,22 @@ using RabbitMQ.Client.Events;
 
 namespace _3_Payment.Infrastructure.Messaging;
 
-public sealed class CompraSolicitadaWorker : BackgroundService
+public sealed class UsuarioRegistradoWorker : BackgroundService
 {
     private readonly IConnectionFactory _connectionFactory;
-    private readonly ILogger<CompraSolicitadaWorker> _logger;
+    private readonly ILogger<UsuarioRegistradoWorker> _logger;
     private readonly IServiceScopeFactory _scopeFactory;
 
     private IConnection? _connection;
     private IChannel? _channel;
 
-    private const string ExchangeName = "catalogo.exchange";
-    private const string QueueName = "pagamento.compra.solicitada";
-    private const string RoutingKey = "catalogo.compra.solicitada";
+    private const string ExchangeName = "notificacao.exchange";
+    private const string QueueName = "pagamento.usuario.registrado";
+    private const string RoutingKey = "autenticacao.usuario.registrado";
 
-    public CompraSolicitadaWorker(
+    public UsuarioRegistradoWorker(
         IConnectionFactory connectionFactory,
-        ILogger<CompraSolicitadaWorker> logger,
+        ILogger<UsuarioRegistradoWorker> logger,
         IServiceScopeFactory scopeFactory)
     {
         _connectionFactory = connectionFactory;
@@ -39,7 +38,7 @@ public sealed class CompraSolicitadaWorker : BackgroundService
         {
             try
             {
-                _logger.LogInformation("Conectando ao RabbitMQ para consumir solicitações de compra...");
+                _logger.LogInformation("Conectando ao RabbitMQ para consumir usuarios registrados...");
                 _connection = await _connectionFactory.CreateConnectionAsync(cancellationToken: stoppingToken);
                 _channel = await _connection.CreateChannelAsync(cancellationToken: stoppingToken);
 
@@ -50,7 +49,7 @@ public sealed class CompraSolicitadaWorker : BackgroundService
 
                 await _channel.BasicConsumeAsync(QueueName, autoAck: false, consumer: consumer, cancellationToken: stoppingToken);
 
-                _logger.LogInformation("Worker de pagamento aguardando solicitações de compra na fila {Queue}.", QueueName);
+                _logger.LogInformation("Worker de provisionamento aguardando usuarios registrados na fila {Queue}.", QueueName);
 
                 while (!stoppingToken.IsCancellationRequested && _connection.IsOpen && _channel.IsOpen)
                 {
@@ -90,74 +89,31 @@ public sealed class CompraSolicitadaWorker : BackgroundService
         {
             var body = ea.Body.ToArray();
             var json = Encoding.UTF8.GetString(body);
-            var evento = JsonSerializer.Deserialize<CompraSolicitadaMensagem>(json, new JsonSerializerOptions
+            var evento = JsonSerializer.Deserialize<UsuarioRegistradoMensagem>(json, new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true
             });
 
             if (evento is null)
             {
-                throw new JsonException("Evento de compra nulo.");
+                throw new JsonException("Evento de usuario registrado nulo.");
             }
-
-            _logger.LogInformation(
-                "Solicitação de compra {CompraId} recebida para o usuário {UsuarioId}.",
-                evento.CompraId,
-                evento.UsuarioId);
 
             await using var scope = _scopeFactory.CreateAsyncScope();
-            var contaRepository = scope.ServiceProvider.GetRequiredService<IContaRepository>();
-            var pagamentoRepository = scope.ServiceProvider.GetRequiredService<IPagamentoRepository>();
-            var messagingPublisher = scope.ServiceProvider.GetRequiredService<IMessagingPublisher>();
+            var contaService = scope.ServiceProvider.GetRequiredService<IContaService>();
+            var conta = await contaService.CriarContaAsync(evento.IdLogin);
 
-            var pagamento = new Pagamento(0, evento.CompraId, evento.UsuarioId);
-            var aprovado = false;
-            string? motivoRecusa = null;
-
-            var conta = await contaRepository.ObterContaPorLoginId(evento.UsuarioId)
-                ?? await contaRepository.ObterContaPorId(evento.UsuarioId);
-
-            if (evento.ValorTotal <= 0)
-            {
-                motivoRecusa = "Valor total da compra invalido.";
-                pagamento.RecusarPagamento();
-            }
-            else if (conta is null)
-            {
-                motivoRecusa = "Conta do usuario nao encontrada.";
-                pagamento.RecusarPagamento();
-            }
-            else if (conta.Saldo < evento.ValorTotal)
-            {
-                motivoRecusa = "Saldo insuficiente para processar a compra.";
-                pagamento.RecusarPagamento();
-            }
-            else
-            {
-                conta.Debitar(evento.ValorTotal);
-                await contaRepository.DebitarSaldo(conta, evento.ValorTotal);
-
-                pagamento.ConfirmarPagamento();
-                aprovado = true;
-            }
-
-            await pagamentoRepository.Add(pagamento);
-
-            await messagingPublisher.PublishPaymentProcessedAsync(
-                userId: evento.UsuarioId,
-                compraId: evento.CompraId,
-                emailUsuario: evento.EmailUsuario,
-                valorTotal: evento.ValorTotal,
-                aprovado: aprovado,
-                motivoRecusa: motivoRecusa,
-                rastreioId: evento.RastreioId);
+            _logger.LogInformation(
+                "Conta {ContaId} provisionada para o login {LoginId} ({Email}).",
+                conta.IdConta,
+                evento.IdLogin,
+                evento.Email);
 
             await _channel!.BasicAckAsync(ea.DeliveryTag, multiple: false);
-            _logger.LogInformation("Resultado de pagamento publicado para a compra {CompraId}.", evento.CompraId);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erro ao processar solicitação de compra. Rejeitando mensagem.");
+            _logger.LogError(ex, "Erro ao provisionar conta do usuario registrado. Rejeitando mensagem.");
             await _channel!.BasicNackAsync(ea.DeliveryTag, multiple: false, requeue: false);
         }
     }
@@ -172,7 +128,6 @@ public sealed class CompraSolicitadaWorker : BackgroundService
             }
             catch
             {
-                // Ignora falhas ao fechar o canal.
             }
 
             await _channel.DisposeAsync();
@@ -187,7 +142,6 @@ public sealed class CompraSolicitadaWorker : BackgroundService
             }
             catch
             {
-                // Ignora falhas ao fechar a conexão.
             }
 
             await _connection.DisposeAsync();
@@ -195,14 +149,9 @@ public sealed class CompraSolicitadaWorker : BackgroundService
         }
     }
 
-    private sealed record CompraSolicitadaMensagem(
-        int CompraId,
-        int UsuarioId,
-        IReadOnlyCollection<int> JogosIds,
-        decimal ValorTotal,
-        DateTime SolicitadaEm,
-        string EmailUsuario)
-    {
-        public string RastreioId { get; init; } = Guid.NewGuid().ToString();
-    }
+    private sealed record UsuarioRegistradoMensagem(
+        int IdLogin,
+        string Nome,
+        string Email,
+        int TipoUsuario);
 }

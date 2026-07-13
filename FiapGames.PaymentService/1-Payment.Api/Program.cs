@@ -43,6 +43,7 @@ builder.Services.AddScoped<IPagamentoService, PagamentoService>();
 
 builder.Services.AddScoped<IMessagingPublisher, MessagingPublisher>();
 builder.Services.AddHostedService<CompraSolicitadaWorker>();
+builder.Services.AddHostedService<UsuarioRegistradoWorker>();
 
 var connectionString = builder.Configuration.GetConnectionString("FIAPGamesConnection");
 var jwtKey = builder.Configuration["Jwt:Key"];

@@ -40,20 +40,20 @@ namespace Context
             builder.Entity<Conta>(entity =>
             {
                 entity.HasKey(e => e.IdConta);
+                entity.Property(e => e.IdLogin).IsRequired();
                 entity.Property(e => e.Saldo).IsRequired();
                 entity.Property(e => e.DataAtualizacao).IsRequired();
+                entity.HasIndex(e => e.IdLogin).IsUnique();
             });
 
             builder.Entity<Pagamento>(entity =>
             {
                 entity.HasKey(e => e.IdPagamento);
                 entity.Property(e => e.IdCompra).IsRequired();
+                entity.Property(e => e.IdUsuario).IsRequired();
                 entity.Property(e => e.DataHoraInclusao).IsRequired();
                 entity.Property(e => e.Status).IsRequired();
-                entity.HasOne(e => e.Compra)
-                      .WithMany()
-                      .HasForeignKey(e => e.IdCompra)
-                      .OnDelete(DeleteBehavior.Restrict);
+                entity.HasIndex(e => e.IdUsuario);
             });
         }
     }
