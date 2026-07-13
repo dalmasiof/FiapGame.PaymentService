@@ -10,5 +10,6 @@ namespace _2_Payment.Application.Interfaces
         Task<decimal> ObterSaldo(int idConta);
         Task AdicionarSaldo(Conta conta, decimal valor);
         Task DebitarSaldo(Conta conta, decimal valor);
+        Task<IEnumerable<Conta>> ListarContasAsync();
     }
 }

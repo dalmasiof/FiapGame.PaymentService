@@ -41,11 +41,37 @@ public class ContaServiceTests
         Assert.Equal(25m, conta.Valor);
     }
 
+    [Fact]
+    public async Task ListarContasAsync_DeveRetornarTodasAsPropriedadesDaConta()
+    {
+        var conta = new Conta(100m)
+        {
+            IdConta = 11,
+            IdLogin = 22
+        };
+
+        var repository = new FakeContaRepository
+        {
+            Contas = new List<Conta> { conta }
+        };
+
+        var service = new ContaService(repository);
+
+        var contas = (await service.ListarContasAsync()).ToList();
+
+        Assert.Single(contas);
+        Assert.Equal(conta.IdConta, contas[0].IdConta);
+        Assert.Equal(conta.IdLogin, contas[0].IdLogin);
+        Assert.Equal(conta.Saldo, contas[0].Saldo);
+        Assert.Equal(conta.DataAtualizacao, contas[0].DataAtualizacao);
+    }
+
     private sealed class FakeContaRepository : IContaRepository
     {
         public int AdicionarContaCalls { get; private set; }
         public Conta? ContaPorLogin { get; set; }
         public Conta? StoredConta { get; private set; }
+        public IEnumerable<Conta> Contas { get; set; } = Enumerable.Empty<Conta>();
 
         public Task AdicionarConta(Conta conta)
         {
@@ -76,6 +102,11 @@ public class ContaServiceTests
         {
             var saldo = StoredConta is not null && StoredConta.IdConta == idConta ? StoredConta.Saldo : 0m;
             return Task.FromResult(saldo);
+        }
+
+        public Task<IEnumerable<Conta>> ListarContasAsync()
+        {
+            return Task.FromResult(Contas);
         }
     }
 }

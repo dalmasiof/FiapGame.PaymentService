@@ -49,5 +49,13 @@ namespace _3_Payment.Infrastructure.Repository
             var conta = await ObterContaPorId(idConta);
             return conta?.Saldo ?? 0m;
         }
+
+        public async Task<IEnumerable<Conta>> ListarContasAsync()
+        {
+            return await _context.Contas
+                .AsNoTracking()
+                .OrderBy(c => c.IdConta)
+                .ToListAsync();
+        }
     }
 }

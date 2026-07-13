@@ -1,6 +1,7 @@
 ﻿using _2_Payment.Application.Dtos;
 using _2_Payment.Application.Interfaces;
 using Domain;
+using System.Linq;
 
 namespace _2_Payment.Application.Service
 {
@@ -61,6 +62,17 @@ namespace _2_Payment.Application.Service
             await _contaRepository.DebitarSaldo(conta, contaDto.Valor);
 
             return new ContaDto(conta.IdConta, conta.Saldo);
+        }
+
+        public async Task<IEnumerable<ContaDetalhesDto>> ListarContasAsync()
+        {
+            var contas = await _contaRepository.ListarContasAsync();
+
+            return contas.Select(conta => new ContaDetalhesDto(
+                conta.IdConta,
+                conta.IdLogin,
+                conta.Saldo,
+                conta.DataAtualizacao));
         }
     }
 }

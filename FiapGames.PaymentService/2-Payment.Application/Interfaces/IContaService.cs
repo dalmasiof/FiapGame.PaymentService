@@ -9,5 +9,6 @@ namespace _2_Payment.Application.Interfaces
         Task<ContaDto> ObterSaldo(int idConta);
         Task<ContaDto> AdicionarSaldo(ContaDto contaDto);
         Task<ContaDto> DebitarSaldo(ContaDto contaDto);
+        Task<IEnumerable<ContaDetalhesDto>> ListarContasAsync();
     }
 }

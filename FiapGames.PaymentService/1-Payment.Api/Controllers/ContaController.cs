@@ -42,5 +42,16 @@ namespace _1_Payment.Api.Controllers
             var conta = await _contaService.AdicionarSaldo(dto);
             return Ok(conta);
         }
+
+        /// <summary>
+        /// Lista todas as contas com todos os seus dados.
+        /// </summary>
+        [Authorize(Roles = "Admin")]
+        [HttpGet]
+        public async Task<IActionResult> ListarContas()
+        {
+            var contas = await _contaService.ListarContasAsync();
+            return Ok(contas);
+        }
     }
 }
