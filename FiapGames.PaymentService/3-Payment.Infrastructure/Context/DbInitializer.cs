@@ -8,8 +8,6 @@ namespace Context
     {
         public static async Task SeedAsync(PaymentContext context)
         {
-            await context.Database.EnsureCreatedAsync();
-
             if (!await context.Contas.AnyAsync())
             {
                 var conta = new Conta(150m)

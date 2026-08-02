@@ -22,6 +22,9 @@ public sealed class CompraSolicitadaWorker : BackgroundService
     private const string ExchangeName = "catalogo.exchange";
     private const string QueueName = "pagamento.compra.solicitada";
     private const string RoutingKey = "catalogo.compra.solicitada";
+    private const string DlxExchangeName = "pagamento.compra.solicitada.dlx.exchange";
+    private const string DlqQueueName = "pagamento.compra.solicitada.dlq";
+    private const string DlxRoutingKey = "pagamento.compra.solicitada.falha";
 
     public CompraSolicitadaWorker(
         IConnectionFactory connectionFactory,
@@ -80,7 +83,24 @@ public sealed class CompraSolicitadaWorker : BackgroundService
     private async Task ConfigurarTopologiaAsync(CancellationToken cancellationToken)
     {
         await _channel!.ExchangeDeclareAsync(ExchangeName, ExchangeType.Direct, durable: true, autoDelete: false, cancellationToken: cancellationToken);
-        await _channel.QueueDeclareAsync(QueueName, durable: true, exclusive: false, autoDelete: false, cancellationToken: cancellationToken);
+        await _channel.ExchangeDeclareAsync(DlxExchangeName, ExchangeType.Direct, durable: true, autoDelete: false, cancellationToken: cancellationToken);
+
+        await _channel.QueueDeclareAsync(DlqQueueName, durable: true, exclusive: false, autoDelete: false, cancellationToken: cancellationToken);
+        await _channel.QueueBindAsync(DlqQueueName, DlxExchangeName, DlxRoutingKey, cancellationToken: cancellationToken);
+
+        var mainQueueArguments = new Dictionary<string, object?>
+        {
+            ["x-dead-letter-exchange"] = DlxExchangeName,
+            ["x-dead-letter-routing-key"] = DlxRoutingKey
+        };
+
+        await _channel.QueueDeclareAsync(
+            QueueName,
+            durable: true,
+            exclusive: false,
+            autoDelete: false,
+            arguments: mainQueueArguments,
+            cancellationToken: cancellationToken);
         await _channel.QueueBindAsync(QueueName, ExchangeName, RoutingKey, cancellationToken: cancellationToken);
     }
 

@@ -23,8 +23,8 @@ namespace Context
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.IdUsuario).IsRequired();
                 entity.Property(e => e.DataCompra).IsRequired();
-                entity.Property(e => e.ValorTotalBruto).IsRequired();
-                entity.Property(e => e.ValorTotalLiquido).IsRequired();
+                entity.Property(e => e.ValorTotalBruto).HasPrecision(18, 2).IsRequired();
+                entity.Property(e => e.ValorTotalLiquido).HasPrecision(18, 2).IsRequired();
                 entity.HasMany<CompraJogo>("CompraJogos")
                       .WithOne()
                       .HasForeignKey("CompraId")
@@ -34,14 +34,14 @@ namespace Context
             builder.Entity<CompraJogo>(entity =>
             {
                 entity.HasKey(e => new { e.CompraId, e.JogoId });
-                entity.Property(e => e.PrecoAplicado).IsRequired();
+                entity.Property(e => e.PrecoAplicado).HasPrecision(18, 2).IsRequired();
             });
 
             builder.Entity<Conta>(entity =>
             {
                 entity.HasKey(e => e.IdConta);
                 entity.Property(e => e.IdLogin).IsRequired();
-                entity.Property(e => e.Saldo).IsRequired();
+                entity.Property(e => e.Saldo).HasPrecision(18, 2).IsRequired();
                 entity.Property(e => e.DataAtualizacao).IsRequired();
                 entity.HasIndex(e => e.IdLogin).IsUnique();
             });

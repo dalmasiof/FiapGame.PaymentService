@@ -21,6 +21,9 @@ public sealed class UsuarioRegistradoWorker : BackgroundService
     private const string ExchangeName = "notificacao.exchange";
     private const string QueueName = "pagamento.usuario.registrado";
     private const string RoutingKey = "autenticacao.usuario.registrado";
+    private const string DlxExchangeName = "pagamento.usuario.registrado.dlx.exchange";
+    private const string DlqQueueName = "pagamento.usuario.registrado.dlq";
+    private const string DlxRoutingKey = "pagamento.usuario.registrado.falha";
 
     public UsuarioRegistradoWorker(
         IConnectionFactory connectionFactory,
@@ -79,7 +82,24 @@ public sealed class UsuarioRegistradoWorker : BackgroundService
     private async Task ConfigurarTopologiaAsync(CancellationToken cancellationToken)
     {
         await _channel!.ExchangeDeclareAsync(ExchangeName, ExchangeType.Direct, durable: true, autoDelete: false, cancellationToken: cancellationToken);
-        await _channel.QueueDeclareAsync(QueueName, durable: true, exclusive: false, autoDelete: false, cancellationToken: cancellationToken);
+        await _channel.ExchangeDeclareAsync(DlxExchangeName, ExchangeType.Direct, durable: true, autoDelete: false, cancellationToken: cancellationToken);
+
+        await _channel.QueueDeclareAsync(DlqQueueName, durable: true, exclusive: false, autoDelete: false, cancellationToken: cancellationToken);
+        await _channel.QueueBindAsync(DlqQueueName, DlxExchangeName, DlxRoutingKey, cancellationToken: cancellationToken);
+
+        var mainQueueArguments = new Dictionary<string, object?>
+        {
+            ["x-dead-letter-exchange"] = DlxExchangeName,
+            ["x-dead-letter-routing-key"] = DlxRoutingKey
+        };
+
+        await _channel.QueueDeclareAsync(
+            QueueName,
+            durable: true,
+            exclusive: false,
+            autoDelete: false,
+            arguments: mainQueueArguments,
+            cancellationToken: cancellationToken);
         await _channel.QueueBindAsync(QueueName, ExchangeName, RoutingKey, cancellationToken: cancellationToken);
     }
 

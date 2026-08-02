@@ -51,6 +51,9 @@ public class CompraServiceTests
         }
 
         public Task<ContaDto> ObterSaldo(int idConta) => Task.FromResult(new ContaDto(idConta, 0m));
+
+        public Task<IEnumerable<ContaDetalhesDto>> ListarContasAsync() =>
+            Task.FromResult<IEnumerable<ContaDetalhesDto>>([]);
     }
 
     private sealed class FakeBibliotecaService : IBibliotecaService
