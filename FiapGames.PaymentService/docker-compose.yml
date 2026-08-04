@@ -10,7 +10,7 @@ services:
       - "8083:8082"
     environment:
       ASPNETCORE_ENVIRONMENT: Development
-      ConnectionStrings__FIAPGamesConnection: "Server=sqlserver-payment,1433;Database=fiapgames_payment;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True;Encrypt=False;Connect Timeout=60;ConnectRetryCount=20;ConnectRetryInterval=5"
+      ConnectionStrings__PaymentConnection: "Server=sqlserver-payment,1433;Database=fiapgames_payment;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True;Encrypt=False;Connect Timeout=60;ConnectRetryCount=20;ConnectRetryInterval=5"
     depends_on:
       sqlserver-payment:
         condition: service_healthy

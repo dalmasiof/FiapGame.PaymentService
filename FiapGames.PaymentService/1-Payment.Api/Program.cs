@@ -75,11 +75,11 @@ builder.Services.AddScoped<IMessagingPublisher, MessagingPublisher>();
 builder.Services.AddHostedService<CompraSolicitadaWorker>();
 builder.Services.AddHostedService<UsuarioRegistradoWorker>();
 
-var connectionString = builder.Configuration.GetConnectionString("FIAPGamesConnection");
+var connectionString = builder.Configuration.GetConnectionString("PaymentConnection");
 if (string.IsNullOrWhiteSpace(connectionString))
 {
     throw new InvalidOperationException(
-        "Connection string FIAPGamesConnection is required.");
+        "Connection string PaymentConnection is required.");
 }
 
 var jwksUri = ResolveJwksUri(builder.Configuration);
