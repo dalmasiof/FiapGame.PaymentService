@@ -1,5 +1,17 @@
 # FiapGames.Payment
 
+## Producao no Azure
+
+O servico e publicado no Azure Container Apps e exposto somente pelo Azure API Management:
+
+```text
+https://apim-fiapgames-prod.azure-api.net/payment
+```
+
+As requisicoes passam pela politica JWT RS256 e pelo rate limit do APIM. O Container App permite acesso externo apenas a partir do IP do gateway. SQL, RabbitMQ e configuracoes JWT sao obtidos do Azure Key Vault por identidade gerenciada.
+
+O workflow `.github/workflows/deploy-production.yml` faz build e push no ACR, executa migrations por Container Apps Job com `--migrate` e publica a nova revisao apenas em caso de sucesso. A mensageria possui DLX/DLQ e rejeita mensagens com falha usando `requeue: false`. Health checks: `/health/live` e `/health/ready`.
+
 Microserviço responsável pelo processamento de pagamentos, controle de saldo e registro de movimentações financeiras da plataforma FiapGames.
 
 Este serviço atua como o componente financeiro do ecossistema, recebendo eventos e coordenando operações como compra, cobrança, validação de saldo e histórico de transações.

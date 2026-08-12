@@ -198,3 +198,12 @@ jobs:
           ingress: external
           targetPort: 8082
           environmentVariables: ASPNETCORE_ENVIRONMENT=Production KeyVaultUri=${{ env.KEY_VAULT_URI }} AZURE_CLIENT_ID=${{ env.MANAGED_IDENTITY_CLIENT_ID }}
+
+      - name: Configure economical autoscaling
+        run: |
+          az containerapp update \
+            --name "$CONTAINER_APP_NAME" \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --min-replicas 0 \
+            --max-replicas 1 \
+            --output none
