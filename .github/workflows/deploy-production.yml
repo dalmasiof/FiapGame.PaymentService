@@ -2,7 +2,7 @@ name: Deploy Payment API to Production
 
 on:
   push:
-    branches: [main, azureContainer]
+    branches: [main]
   workflow_dispatch:
 
 permissions:
