@@ -21,6 +21,7 @@ env:
   KEY_VAULT_URI: https://kv-fiapgames-cec7f71a.vault.azure.net/
   MANAGED_IDENTITY_RESOURCE_ID: /subscriptions/cec7f71a-b642-403e-bd36-dfcf0467ced4/resourceGroups/rg-fiapgames-prod/providers/Microsoft.ManagedIdentity/userAssignedIdentities/id-fiapgames-workloads-prod
   MANAGED_IDENTITY_CLIENT_ID: e302d8a9-bdd4-4f92-b9a8-17e963a7a17c
+  SERVICE_BUS_NAMESPACE: sb-fiapgames-notification-cec7f71a.servicebus.windows.net
 
 jobs:
   deploy:
@@ -197,7 +198,7 @@ jobs:
           imageToDeploy: ${{ env.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
           ingress: external
           targetPort: 8082
-          environmentVariables: ASPNETCORE_ENVIRONMENT=Production KeyVaultUri=${{ env.KEY_VAULT_URI }} AZURE_CLIENT_ID=${{ env.MANAGED_IDENTITY_CLIENT_ID }}
+          environmentVariables: ASPNETCORE_ENVIRONMENT=Production KeyVaultUri=${{ env.KEY_VAULT_URI }} AZURE_CLIENT_ID=${{ env.MANAGED_IDENTITY_CLIENT_ID }} ServiceBus__FullyQualifiedNamespace=${{ env.SERVICE_BUS_NAMESPACE }}
 
       - name: Configure economical autoscaling
         run: |
