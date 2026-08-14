@@ -1,6 +1,10 @@
 using System.Text;
 using System.Text.Json;
 using _2_Payment.Application.Interfaces;
+using Azure.Identity;
+using Azure.Messaging.ServiceBus;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 using RabbitMQ.Client;
 
 namespace _3_Payment.Infrastructure.Messaging
@@ -11,6 +15,8 @@ namespace _3_Payment.Infrastructure.Messaging
         private IConnection? _connection;
         private IChannel? _channel;
         private IChannel? _notificationChannel;
+        private readonly ServiceBusClient? _serviceBusClient;
+        private readonly ServiceBusSender? _paymentNotificationSender;
 
         private const string PaymentExchangeName = "pagamento.exchange";
         private const string NotificationExchangeName = "notificacao.exchange";
@@ -18,9 +24,19 @@ namespace _3_Payment.Infrastructure.Messaging
         private const string RoutingKeyRejected = "pagamento.recusado";
         private const string NotificationRoutingKey = "pagamento.notificacao";
 
-        public MessagingPublisher(IConnectionFactory connectionFactory)
+        public MessagingPublisher(IConnectionFactory connectionFactory, IConfiguration configuration, IHostEnvironment environment)
         {
             _connectionFactory = connectionFactory;
+            var fullyQualifiedNamespace = configuration["ServiceBus:FullyQualifiedNamespace"];
+            if (!string.IsNullOrWhiteSpace(fullyQualifiedNamespace))
+            {
+                _serviceBusClient = new ServiceBusClient(fullyQualifiedNamespace, new DefaultAzureCredential());
+                _paymentNotificationSender = _serviceBusClient.CreateSender("notification-payment");
+            }
+            else if (environment.IsProduction())
+            {
+                throw new InvalidOperationException("ServiceBus:FullyQualifiedNamespace is required in Production.");
+            }
         }
 
         public Task PublishAddGameAsync(int userId, int gameId)
@@ -77,6 +93,16 @@ namespace _3_Payment.Infrastructure.Messaging
                 basicProperties: properties,
                 body: body);
 
+            if (_paymentNotificationSender is not null)
+            {
+                await _paymentNotificationSender.SendMessageAsync(new ServiceBusMessage(body)
+                {
+                    ContentType = "application/json",
+                    CorrelationId = correlationId,
+                    MessageId = correlationId
+                });
+            }
+
             if (aprovado && !string.IsNullOrWhiteSpace(emailUsuario))
             {
                 await PublishNotificationAsync(compraId, emailUsuario, valorTotal, correlationId);
@@ -128,6 +154,8 @@ namespace _3_Payment.Infrastructure.Messaging
 
         public async ValueTask DisposeAsync()
         {
+            if (_paymentNotificationSender is not null) await _paymentNotificationSender.DisposeAsync();
+            if (_serviceBusClient is not null) await _serviceBusClient.DisposeAsync();
             if (_notificationChannel is not null) await _notificationChannel.DisposeAsync();
             if (_channel is not null) await _channel.DisposeAsync();
             if (_connection is not null) await _connection.DisposeAsync();
