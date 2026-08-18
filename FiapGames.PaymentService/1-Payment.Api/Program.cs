@@ -14,6 +14,7 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.IdentityModel.Protocols;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
+using Prometheus;
 using RabbitMQ.Client;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -41,6 +42,7 @@ if (builder.Environment.IsDevelopment())
 }
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
+ 
 
 var rabbitHost = builder.Configuration["RabbitMq:HostName"] ?? "localhost";
 var rabbitPort = int.TryParse(builder.Configuration["RabbitMq:Port"], out var parsedPort) ? parsedPort : 5672;
@@ -152,6 +154,7 @@ if (args.Contains("--migrate", StringComparer.OrdinalIgnoreCase))
 }
 
 app.UseSwagger();
+app.UseHttpMetrics();
 if (app.Environment.IsDevelopment())
 {
     app.UseSwaggerUI();
@@ -165,6 +168,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapMetrics("/metrics");
 app.MapHealthChecks("/health/live", new HealthCheckOptions
 {
     Predicate = check => check.Tags.Contains("live")
