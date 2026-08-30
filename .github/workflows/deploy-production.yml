@@ -14,6 +14,7 @@ concurrency:
 
 env:
   AZURE_RESOURCE_GROUP: rg-fiapgames-prod
+  AZURE_SUBSCRIPTION_ID: 64f434dd-5cb0-4c01-971d-7e0e6ba4db9b
   CONTAINER_APP_ENVIRONMENT: cae-fiapgames-prod
   CONTAINER_APP_NAME: ca-payment-api
   IMAGE_NAME: payment-api
@@ -49,12 +50,11 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
+      - name: Select target subscription
+        run: az account set --subscription "$AZURE_SUBSCRIPTION_ID"
+
       - name: Log in to Azure Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.ACR_LOGIN_SERVER }}
-          username: ${{ secrets.ACR_USERNAME }}
-          password: ${{ secrets.ACR_PASSWORD }}
+        run: az acr login --name "${ACR_LOGIN_SERVER%%.*}"
 
       - name: Build and push image
         uses: docker/build-push-action@v6
@@ -68,20 +68,18 @@ jobs:
 
       - name: Run database migrations
         uses: azure/cli@v2
-        env:
-          ACR_USERNAME: ${{ secrets.ACR_USERNAME }}
-          ACR_PASSWORD: ${{ secrets.ACR_PASSWORD }}
         with:
           inlineScript: |
             set -euo pipefail
             : "${ACR_LOGIN_SERVER:?ACR_LOGIN_SERVER is required}"
-            : "${ACR_USERNAME:?ACR_USERNAME is required}"
-            : "${ACR_PASSWORD:?ACR_PASSWORD is required}"
             : "${KEY_VAULT_URI:?KEY_VAULT_URI is required}"
             : "${MANAGED_IDENTITY_RESOURCE_ID:?AZURE_MANAGED_IDENTITY_RESOURCE_ID is required}"
             : "${MANAGED_IDENTITY_CLIENT_ID:?AZURE_MANAGED_IDENTITY_CLIENT_ID is required}"
 
             IMAGE="${ACR_LOGIN_SERVER}/${IMAGE_NAME}:${GITHUB_SHA}"
+            ACR_NAME="${ACR_LOGIN_SERVER%%.*}"
+            ACR_USERNAME=$(az acr credential show --name "$ACR_NAME" --query username -o tsv)
+            ACR_PASSWORD=$(az acr credential show --name "$ACR_NAME" --query 'passwords[0].value' -o tsv)
             JOB_NAME="payment-mig-${GITHUB_RUN_ID:0:12}-${GITHUB_RUN_ATTEMPT}"
 
             cleanup() {
@@ -187,18 +185,20 @@ jobs:
             --query identity.type --output tsv | grep -q UserAssigned
 
       - name: Deploy revision
-        uses: azure/container-apps-deploy-action@v2
-        with:
-          acrName: acrfiapgamesprod64f434dd
-          acrUsername: ${{ secrets.ACR_USERNAME }}
-          acrPassword: ${{ secrets.ACR_PASSWORD }}
-          containerAppName: ${{ env.CONTAINER_APP_NAME }}
-          containerAppEnvironment: ${{ env.CONTAINER_APP_ENVIRONMENT }}
-          resourceGroup: ${{ env.AZURE_RESOURCE_GROUP }}
-          imageToDeploy: ${{ env.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
-          ingress: external
-          targetPort: 8082
-          environmentVariables: ASPNETCORE_ENVIRONMENT=Production KeyVaultUri=${{ env.KEY_VAULT_URI }} AZURE_CLIENT_ID=${{ env.MANAGED_IDENTITY_CLIENT_ID }} ServiceBus__FullyQualifiedNamespace=${{ env.SERVICE_BUS_NAMESPACE }}
+        run: |
+          ACR_NAME="${ACR_LOGIN_SERVER%%.*}"
+          ACR_USERNAME=$(az acr credential show --name "$ACR_NAME" --query username -o tsv)
+          ACR_PASSWORD=$(az acr credential show --name "$ACR_NAME" --query 'passwords[0].value' -o tsv)
+          az containerapp registry set --name "$CONTAINER_APP_NAME" \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --server "$ACR_LOGIN_SERVER" \
+            --username "$ACR_USERNAME" --password "$ACR_PASSWORD"
+          az containerapp update --name "$CONTAINER_APP_NAME" \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --image "$ACR_LOGIN_SERVER/$IMAGE_NAME:$GITHUB_SHA" \
+            --set-env-vars ASPNETCORE_ENVIRONMENT=Production \
+              KeyVaultUri="$KEY_VAULT_URI" AZURE_CLIENT_ID="$MANAGED_IDENTITY_CLIENT_ID" \
+              ServiceBus__FullyQualifiedNamespace="$SERVICE_BUS_NAMESPACE"
 
       - name: Configure economical autoscaling
         run: |
