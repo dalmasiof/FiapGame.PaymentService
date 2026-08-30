@@ -17,11 +17,11 @@ env:
   CONTAINER_APP_ENVIRONMENT: cae-fiapgames-prod
   CONTAINER_APP_NAME: ca-payment-api
   IMAGE_NAME: payment-api
-  ACR_LOGIN_SERVER: acrfiapgamesprodcec7f71a.azurecr.io
-  KEY_VAULT_URI: https://kv-fiapgames-cec7f71a.vault.azure.net/
-  MANAGED_IDENTITY_RESOURCE_ID: /subscriptions/cec7f71a-b642-403e-bd36-dfcf0467ced4/resourceGroups/rg-fiapgames-prod/providers/Microsoft.ManagedIdentity/userAssignedIdentities/id-fiapgames-workloads-prod
-  MANAGED_IDENTITY_CLIENT_ID: e302d8a9-bdd4-4f92-b9a8-17e963a7a17c
-  SERVICE_BUS_NAMESPACE: sb-fiapgames-notification-cec7f71a.servicebus.windows.net
+  ACR_LOGIN_SERVER: acrfiapgamesprod64f434dd.azurecr.io
+  KEY_VAULT_URI: https://kv-fiapgames-64f434dd.vault.azure.net/
+  MANAGED_IDENTITY_RESOURCE_ID: /subscriptions/64f434dd-5cb0-4c01-971d-7e0e6ba4db9b/resourceGroups/rg-fiapgames-prod/providers/Microsoft.ManagedIdentity/userAssignedIdentities/id-fiapgames-workloads-prod
+  MANAGED_IDENTITY_CLIENT_ID: dfff11eb-a350-4ccb-a466-dee3265a9bf1
+  SERVICE_BUS_NAMESPACE: sb-fiapgames-notification-64f434dd.servicebus.windows.net
 
 jobs:
   deploy:
@@ -189,7 +189,7 @@ jobs:
       - name: Deploy revision
         uses: azure/container-apps-deploy-action@v2
         with:
-          acrName: acrfiapgamesprodcec7f71a
+          acrName: acrfiapgamesprod64f434dd
           acrUsername: ${{ secrets.ACR_USERNAME }}
           acrPassword: ${{ secrets.ACR_PASSWORD }}
           containerAppName: ${{ env.CONTAINER_APP_NAME }}
