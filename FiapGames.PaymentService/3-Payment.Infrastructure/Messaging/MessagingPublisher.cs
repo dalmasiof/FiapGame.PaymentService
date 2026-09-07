@@ -5,12 +5,18 @@ using Azure.Identity;
 using Azure.Messaging.ServiceBus;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
+using Prometheus;
 using RabbitMQ.Client;
 
 namespace _3_Payment.Infrastructure.Messaging
 {
     public class MessagingPublisher : IMessagingPublisher, IAsyncDisposable
     {
+        private static readonly Counter MessagesPublished = Metrics.CreateCounter(
+            "fiapgames_messages_published_total",
+            "Total de mensagens publicadas no RabbitMQ pelo Payment.",
+            new CounterConfiguration { LabelNames = new[] { "exchange", "routing_key" } });
+
         private readonly IConnectionFactory _connectionFactory;
         private IConnection? _connection;
         private IChannel? _channel;
@@ -92,6 +98,7 @@ namespace _3_Payment.Infrastructure.Messaging
                 mandatory: true,
                 basicProperties: properties,
                 body: body);
+            MessagesPublished.WithLabels(PaymentExchangeName, routingKey).Inc();
 
             if (_paymentNotificationSender is not null)
             {
@@ -150,6 +157,7 @@ namespace _3_Payment.Infrastructure.Messaging
                 mandatory: true,
                 basicProperties: notificationProperties,
                 body: notificationBody);
+            MessagesPublished.WithLabels(NotificationExchangeName, NotificationRoutingKey).Inc();
         }
 
         public async ValueTask DisposeAsync()
