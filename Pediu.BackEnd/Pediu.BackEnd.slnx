@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="Padiu.WebApi/Padiu.WebApi.csproj" />
+  <Project Path="Pediu.Application/Pediu.Application.csproj" />
+  <Project Path="Pediu.Domain/Pediu.Domain.csproj" />
+  <Project Path="Pediu.Infrastructure/Pediu.Infrastructure.csproj" />
+</Solution>
