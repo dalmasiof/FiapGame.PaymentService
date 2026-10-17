@@ -9,5 +9,6 @@ data:
   ASPNETCORE_URLS: http://+:8082
   Jwt__Issuer: FiapGamesApi
   Jwt__Audience: FiapGamesClients
+  Jwt__Authority: http://auth-api:8081
   RabbitMq__HostName: rabbitmq
   RabbitMq__Port: "5672"

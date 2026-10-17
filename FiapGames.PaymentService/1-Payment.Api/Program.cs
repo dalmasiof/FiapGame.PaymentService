@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using RabbitMQ.Client;
-using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -45,14 +44,18 @@ builder.Services.AddScoped<IMessagingPublisher, MessagingPublisher>();
 builder.Services.AddHostedService<CompraSolicitadaWorker>();
 builder.Services.AddHostedService<UsuarioRegistradoWorker>();
 
-var connectionString = builder.Configuration.GetConnectionString("FIAPGamesConnection");
-var jwtKey = builder.Configuration["Jwt:Key"];
-if (string.IsNullOrWhiteSpace(jwtKey))
+var connectionString = builder.Configuration.GetConnectionString("PaymentConnection")
+    ?? builder.Configuration.GetConnectionString("FIAPGamesConnection");
+if (string.IsNullOrWhiteSpace(connectionString))
 {
-    throw new InvalidOperationException("Configuration key Jwt:Key is required.");
+    throw new InvalidOperationException("ConnectionStrings:PaymentConnection is required.");
 }
 
-var keyBytes = Encoding.ASCII.GetBytes(jwtKey);
+var jwtAuthority = builder.Configuration["Jwt:Authority"];
+if (string.IsNullOrWhiteSpace(jwtAuthority))
+{
+    throw new InvalidOperationException("Configuration key Jwt:Authority is required.");
+}
 
 builder.Services.AddAuthentication(options =>
 {
@@ -61,17 +64,19 @@ builder.Services.AddAuthentication(options =>
 })
 .AddJwtBearer(options =>
 {
-    options.RequireHttpsMetadata = false;
+    options.Authority = jwtAuthority;
+    options.RequireHttpsMetadata = Uri.TryCreate(jwtAuthority, UriKind.Absolute, out var authorityUri)
+        && authorityUri.Scheme == Uri.UriSchemeHttps;
     options.SaveToken = true;
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(keyBytes),
         ValidateIssuer = true,
         ValidIssuer = builder.Configuration["Jwt:Issuer"],
         ValidateAudience = true,
         ValidAudience = builder.Configuration["Jwt:Audience"],
         ValidateLifetime = true,
+        ValidAlgorithms = [SecurityAlgorithms.RsaSha256],
         ClockSkew = TimeSpan.Zero
     };
 });

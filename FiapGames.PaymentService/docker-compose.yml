@@ -10,7 +10,8 @@ services:
       - "8083:8082"
     environment:
       ASPNETCORE_ENVIRONMENT: Development
-      ConnectionStrings__FIAPGamesConnection: "Server=sqlserver-payment,1433;Database=fiapgames_payment;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True;Encrypt=False;Connect Timeout=60;ConnectRetryCount=20;ConnectRetryInterval=5"
+      ConnectionStrings__FIAPGamesConnection: "Server=sqlserver-payment,1433;Database=fiapgames_payment;User Id=sa;Password=${SQLSERVER_SA_PASSWORD:?Set SQLSERVER_SA_PASSWORD};TrustServerCertificate=True;Encrypt=False;Connect Timeout=60;ConnectRetryCount=20;ConnectRetryInterval=5"
+      Jwt__Authority: "${JWT_AUTHORITY:?Set JWT_AUTHORITY}"
     depends_on:
       sqlserver-payment:
         condition: service_healthy
@@ -23,7 +24,7 @@ services:
     restart: always
     environment:
       ACCEPT_EULA: "Y"
-      MSSQL_SA_PASSWORD: "YourStrong@Passw0rd"
+      MSSQL_SA_PASSWORD: "${SQLSERVER_SA_PASSWORD:?Set SQLSERVER_SA_PASSWORD}"
     ports:
       - "1436:1433"
     volumes:
@@ -32,7 +33,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'YourStrong@Passw0rd' -C -Q 'SELECT 1' || exit 1"
+          "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P '${SQLSERVER_SA_PASSWORD:?Set SQLSERVER_SA_PASSWORD}' -C -Q 'SELECT 1' || exit 1"
         ]
       interval: 10s
       timeout: 5s

@@ -98,7 +98,7 @@ Este microserviço é responsável por:
 
 ## Stack Tecnológica
 
-- .NET 9
+- .NET 10
 - ASP.NET Core Web API
 - Entity Framework Core
 - SQL Server
@@ -148,7 +148,7 @@ dotnet tool update --global dotnet-ef
 ```json
 {
   "ConnectionStrings": {
-    "FIAPGamesConnection": "Server=localhost,1436;Database=fiapgames_payment;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True;Encrypt=False"
+    "FIAPGamesConnection": "Server=localhost,1436;Database=fiapgames_payment;User Id=sa;Password=${SQLSERVER_SA_PASSWORD};TrustServerCertificate=True;Encrypt=False"
   }
 }
 ```
@@ -176,12 +176,11 @@ dotnet run --project src/1-Payment.Api
 Manifests próprios do serviço estão em `k8s/`:
 
 - `payment-api-configmap.yaml`
-- `payment-api-secret.yaml`
 - `payment-api-service.yaml`
 - `payment-api-deployment.yaml`
 
-ConfigMap contém variáveis não sensíveis (ambiente, urls e host/porta de RabbitMQ).
-Secret contém variáveis sensíveis (connection string completa e credenciais de RabbitMQ).
+ConfigMap contém variáveis não sensíveis (ambiente, autoridade JWT, urls e host/porta de RabbitMQ).
+O Secret `payment-api-secret` deve ser criado fora do Git a partir do Key Vault antes de aplicar o Deployment. Nunca versione valores de connection string ou RabbitMQ.
 
 ---
 

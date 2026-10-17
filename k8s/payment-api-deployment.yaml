@@ -54,11 +54,6 @@ spec:
                 secretKeyRef:
                   name: payment-api-secret
                   key: ConnectionStrings__FIAPGamesConnection
-            - name: Jwt__Key
-              valueFrom:
-                secretKeyRef:
-                  name: payment-api-secret
-                  key: Jwt__Key
             - name: RabbitMq__UserName
               valueFrom:
                 secretKeyRef:
